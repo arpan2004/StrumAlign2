@@ -6,6 +6,11 @@ export default {
   ],
   theme: {
     extend: {},
+    colors: {
+      customGreen: "#6a9c78",
+      customGreenLight: '#8abf96',
+      customBackground: '#d0e6c1',
+    },
   },
   plugins: [],
 }
