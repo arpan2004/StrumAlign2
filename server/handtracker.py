@@ -26,40 +26,41 @@ def gen_frames():
 
         # If hand landmarks are detected, draw them
         if result.multi_hand_landmarks:
-            for hand_landmarks in result.multi_hand_landmarks:
+            for hand_landmarks, handedness in zip(result.multi_hand_landmarks, result.multi_handedness):
 
-                mp_drawing.draw_landmarks(frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS)
+                if handedness.classification[0].label == 'Right':
+                    mp_drawing.draw_landmarks(frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS)
 
-                finger_curvatures = analyze_curves(hand_landmarks)
+                    finger_curvatures = analyze_curves(hand_landmarks)
 
-                for finger, angles in finger_curvatures.items():
-                    if angles['Wrist-MCP'] < 170.75 and angles['MCP-PIP'] < 152.50 and angles['PIP-DIP'] < 162.25:
-                        curvature_feedback = f"{finger.capitalize()} Curved Enough!"
-                        color = (0, 255, 0)
-                        bg_color = (0, 128, 0)
+                    for finger, angles in finger_curvatures.items():
+                        if angles['Wrist-MCP'] < 170.75 and angles['MCP-PIP'] < 152.50 and angles['PIP-DIP'] < 162.25:
+                            curvature_feedback = f"{finger.capitalize()} Curved Enough!"
+                            color = (0, 255, 0)
+                            bg_color = (0, 128, 0)
+                            
+                            # cv2.putText(frame, f"{finger.capitalize()} Curved Enough!", 
+                            #             (50, 50 + 30 * list(finger_curvatures.keys()).index(finger)), 
+                            #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        else:
+                            curvature_feedback = f"{finger.capitalize()} Not Curved Enough!"
+                            color = (0, 0, 255)
+                            bg_color = (128, 0, 0)
+
+                            # cv2.putText(frame, f"{finger.capitalize()} Not Curved Enough!", 
+                            #             (50, 50 + 30 * list(finger_curvatures.keys()).index(finger)), 
+                            #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                            
+                        text_size, _ = cv2.getTextSize(curvature_feedback, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
+                        text_width, text_height = text_size
+                        text_x = 50
+                        text_y = 50 + 30 * list(finger_curvatures.keys()).index(finger)
+
+                        cv2.rectangle(frame, (text_x - 3, text_y - text_height - 3), 
+                                    (text_x + text_width + 3, text_y + 3), bg_color, -1)
                         
-                        # cv2.putText(frame, f"{finger.capitalize()} Curved Enough!", 
-                        #             (50, 50 + 30 * list(finger_curvatures.keys()).index(finger)), 
-                        #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                    else:
-                        curvature_feedback = f"{finger.capitalize()} Not Curved Enough!"
-                        color = (0, 0, 255)
-                        bg_color = (128, 0, 0)
-
-                        # cv2.putText(frame, f"{finger.capitalize()} Not Curved Enough!", 
-                        #             (50, 50 + 30 * list(finger_curvatures.keys()).index(finger)), 
-                        #             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                        
-                    text_size, _ = cv2.getTextSize(curvature_feedback, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)
-                    text_width, text_height = text_size
-                    text_x = 50
-                    text_y = 50 + 30 * list(finger_curvatures.keys()).index(finger)
-
-                    cv2.rectangle(frame, (text_x - 3, text_y - text_height - 3), 
-                                  (text_x + text_width + 3, text_y + 3), bg_color, -1)
-                    
-                    cv2.putText(frame, curvature_feedback,
-                                (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+                        cv2.putText(frame, curvature_feedback,
+                                    (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
         # Encode the frame as JPEG
         ret, buffer = cv2.imencode('.jpg', frame)
