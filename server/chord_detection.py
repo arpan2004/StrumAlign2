@@ -13,8 +13,8 @@ from io import BytesIO
 import tempfile
 import os
 
-# app = Flask(__name__)
-# CORS(app)
+app = Flask(__name__)
+CORS(app)
 
 class CNNBlock(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -104,19 +104,17 @@ def predict_live_chord():
     chord_type = "Major" if predicted_class == 0 else "Minor"
     audio_file_path = save_audio_to_wav(audio, 16000)
     print(f"Predicted Chord: {chord_type} (Confidence: {predicted_prob:.2f})")
-    # return jsonify({
-    #     'chord': chord_type,
-    #     'audio_url': audio_file_path
-    # })
+    return jsonify({
+        'chord': chord_type,
+        'audio_url': audio_file_path
+    })
 
-#@app.route('/audio/<filename>')
-# def serve_audio(filename):
-#     try:
-#         return send_file(filename, as_attachment=True)
-#     except FileNotFoundError:
-#         return jsonify({"error": "Audio file not found"}), 404
+@app.route('/audio/<filename>')
+def serve_audio(filename):
+    try:
+        return send_file(filename, as_attachment=True)
+    except FileNotFoundError:
+        return jsonify({"error": "Audio file not found"}), 404
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=3000)
-
-predict_live_chord()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3000)
